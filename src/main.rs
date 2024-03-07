@@ -35,9 +35,25 @@ impl UInt256 {
             (self.limbs[n+1], carry) = self.limbs[n+1].overflowing_add(1);
             n += 1
         }
-        
     }
     
+    pub fn sub(&self, other: &Self) -> Self {
+        let mut carry = false;
+
+        Self {
+            limbs: self.limbs.iter().zip(other.limbs.iter()).map(|(a, b)| {
+                let (mut out, mut new_carry) = a.overflowing_sub(*b);
+                if carry {
+                    (out, new_carry) = out.overflowing_sub(1);
+                }
+                carry = new_carry;
+                out
+            }).collect::<Vec<u64>>()
+                    .try_into()
+                    .expect("4 elem array into 4 elem vec"),
+        }
+    }
+
     pub fn mul_step(z: u64, x: u64, y: u64, carry: u64) -> (u64, u64) {
         let mut hi: u64;
         let mut lo: u64;
@@ -124,11 +140,11 @@ fn main() {
     };
 
     let test2 = UInt256 {
-        limbs: [u64::MAX, 0, 0, 0]
+        limbs: [0, 0, 0, 0]
     };
 
     let test3 = UInt256 {
-        limbs: [u64::MAX, 1, 0, 0]
+        limbs: [1, 0, 0, 0]
     };
 
     //println!("u64 MAX: {:#066b}", u64::MAX);
@@ -142,7 +158,11 @@ fn main() {
     test3.add_u64(u64::MAX);
     println!("TEST3 + u64 MAX: {:?}", test3.limbs);
     */
-
+    /*
     //test2.mul(test3);
     println!("PRODUCT: {:?}", test2.mul(&test3));
+    */
+    
+    println!("DIFF: {:?}", test2.sub(&test3).limbs);
+
 }
